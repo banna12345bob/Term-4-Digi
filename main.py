@@ -1,3 +1,3 @@
-from microbit import *
-import microbit
-display.scroll("Hello, World!")
+from bitio.src.microbit import microbit
+
+print(microbit.Accelerometer().get_values())
