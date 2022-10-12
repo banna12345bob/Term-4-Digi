@@ -1,3 +1,10 @@
-from bitio.src.microbit import microbit
+from microbit import *
+import radio
 
-print(microbit.Accelerometer().get_values())
+radio.on()
+while True:
+    try:
+        radio.send_bytes(str(accelerometer.get_values()))
+    except:
+        radio.send_bytes("FAIL")
+    display.show(Image.ANGRY)
