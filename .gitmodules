@@ -4,3 +4,6 @@
 [submodule "bitio"]
 	path = bitio
 	url = https://github.com/whaleygeek/bitio
+[submodule "pygame"]
+	path = pygame
+	url = https://github.com/pygame/pygame
