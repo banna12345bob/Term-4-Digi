@@ -1,6 +1,9 @@
 from bitio.src import microbit
 import math
 import pygame
+import pygame.camera
+
+from pygame.examples import camera
 
 pygame.init()
 screen = pygame.display.set_mode()
@@ -19,16 +22,16 @@ while running:
         y = int(incoming[1:len(incoming)])
         if y<0.0:
             y *= -1
-    acceleration = math.sqrt(pow(x, 2) + pow(y, 2))
-    if (acceleration-1000.0)>0:
-        print(acceleration-1000.0)
+    print("x: "+str(x))
+    print("y: "+str(y))
 
     # Pygame stuff
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
     screen.fill((255, 255, 255))
-    pygame.draw.circle(screen, (0,0,255), (250, 250), 75)
+    pygame.draw.circle(screen, (0,0,255), (0, 0), 75)
+    pygame.draw.circle(screen, (0,0,255), (max(0, min(x, screen.get_width())), max(0, min(y, screen.get_height()))), 75)
     pygame.display.flip()
 
 pygame.quit()
