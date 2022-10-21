@@ -1,12 +1,17 @@
 from microbit import *
-import radio
+import random
 
-radio.on()
 while True:
-    try:
-        radio.send_bytes("x"+str(accelerometer.get_x()))
-        radio.send_bytes("y"+str(accelerometer.get_y()))
-        display.show(Image.ANGRY)
-    except:
-        display.scroll("FAIL")
-        radio.send_bytes("FAIL")
+    gameStarted = False
+    sleep(random.randint(1000, 5000))
+    gameStarted = True
+    display.show(Image.HEART)
+    while gameStarted:
+        if pin1.is_touched():
+            display.show('A')
+            gameStarted = False
+        elif pin2.is_touched():
+            display.show('B')
+            gameStarted = False
+    sleep(3000)
+    display.clear()
