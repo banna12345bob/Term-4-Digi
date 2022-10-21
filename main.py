@@ -8,10 +8,10 @@ display.show(Image(
     "00000:"
     "09990:"
     "00000"))
-audio.play(Sound.HELLO)
+
 
 while True:
-    if pin_logo.is_touched():
+    if button_a.was_pressed():
         timer = 0
         display.show(Image.HAPPY)
     elif accelerometer.was_gesture('shake'):
