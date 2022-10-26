@@ -41,6 +41,8 @@ while running:
         normalizedRelativeIntersectionY = (relativeIntersectY/(200/2))
         bounceAngle = normalizedRelativeIntersectionY * 75
         bounceAngleY = bounceAngle
+        if flip == False:
+            speed += 1
         flip = True
     elif colide2:
         intersectY = y - ((x - (yOne + 200)) * y) / x
@@ -48,6 +50,8 @@ while running:
         normalizedRelativeIntersectionY = (relativeIntersectY/(200/2))
         bounceAngle = normalizedRelativeIntersectionY * 75
         bounceAngleY = bounceAngle
+        if flip == True:
+            speed += 1
         flip = False
 
     if not flip:
@@ -85,11 +89,13 @@ while running:
     if x <= 0 or x >= screen.get_width():
         x, y = screen.get_width() / 2 - 20, screen.get_height() / 2 - 20
         yOne = yTwo = screen.get_height() / 2 - 100
+        speed = 5
 
     # Pygame stuff
     # Events
     keyState = pygame.key.get_pressed()
     # Very icky ties movement speed to FPS. Fixed by limiting FPS to 60
+    # sensitivity = 1
     # if keyState[pygame.K_DOWN]:
     #     yOne += 10 * sensitivity
     # if keyState[pygame.K_UP]:
