@@ -3,6 +3,7 @@ import radio
 
 radio.on()
 player = 2
+radio.config(channel=player)
 while True:
     try:
         # radio.send_bytes("x"+str(accelerometer.get_x()))
