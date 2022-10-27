@@ -12,21 +12,22 @@ clock = pygame.time.Clock()
 # Displays text that says hello in green
 font = pygame.font.SysFont(None, 24)
 
-microbit.radio.on()
 def update_fps():
 	fps = str(int(clock.get_fps()))
 	fps_text = font.render(fps, 1, (255, 0, 0))
 	return fps_text
 
 def getInputMicrobit(channel):
-    microbit.radio.config(channel=1)
+    microbit.radio.on()
+    microbit.radio.config(channel=channel)
     incoming = microbit.radio.receive_bytes()
+    microbit.radio.off()
     incoming = incoming[2:-1]
     try:
         if incoming[0] == str(channel):
             if incoming[1] == "y":
-                yIn = int(incoming[2:len(incoming)])
-                return (yIn)
+                yIn = int(incoming[2:len(incoming)])-19
+                print(yIn)
         return 0
     except:
         return 0
@@ -53,7 +54,7 @@ yIn1 = yIn2 = 0
 yOne = yTwo = screen.get_height() / 2 - 100
 x, y = screen.get_width() / 2 - 20, screen.get_height() / 2 - 20
 running, flip = True, False
-bounceAngle = bounceAngleY = bounceAngleX = 0
+bounceAngle = bounceAngleY = bounceAngleX = score1 = score2 = 0
 while running:
     yOne = max(0, min(yOne, screen.get_height() - 200))
     yTwo = max(0, min(yTwo, screen.get_height() - 200))
@@ -97,11 +98,13 @@ while running:
     yOne += getInputKeyboard(2) * 0.025 * sensitivity
 
     if x <= 0:
+        score2 += 1
         x, y = screen.get_width() / 2 - 20, screen.get_height() / 2 - 20
         yOne = yTwo = screen.get_height() / 2 - 100
-        bounceAngle = bounceAngleY = bounceAngleX = 0
         speed = 5
+        bounceAngle = bounceAngleY = bounceAngleX = 0
     if x >= screen.get_width():
+        score1 += 1
         x, y = screen.get_width() / 2 - 20, screen.get_height() / 2 - 20
         yOne = yTwo = screen.get_height() / 2 - 100
         bounceAngle = bounceAngleY = 0
@@ -123,6 +126,8 @@ while running:
     # FPS counter
     screen.blit(update_fps(), (20, 20))
     screen.blit(font.render("flip: "+str(flip), 1, (255, 0, 0)), (200, 20))
+    screen.blit(font.render("score1: "+str(score1), 1, (255, 0, 0)), (300, 20))
+    screen.blit(font.render("score2: "+str(score2), 1, (255, 0, 0)), (300, 40))
 
     # Caps the FPS to 60
     clock.tick(60)
