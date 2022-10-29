@@ -1,7 +1,7 @@
-from bitio.src import microbit
+# from bitio.src import microbit
 import math
 import pygame
-
+import time
 
 # https://gamedev.stackexchange.com/questions/4253/in-pong-how-do-you-calculate-the-balls-direction-when-it-bounces-off-the-paddl
 # https://stackoverflow.com/questions/29640685/how-do-i-detect-collision-in-pygame
@@ -55,20 +55,37 @@ yOne = yTwo = screen.get_height() / 2 - 100
 x, y = screen.get_width() / 2 - 20, screen.get_height() / 2 - 20
 running, flip = True, False
 bounceAngle = bounceAngleY = bounceAngleX = score1 = score2 = 0
+dt = now = prev_time = 0
+targetFPS = 60
 while running:
+    keyState = pygame.key.get_pressed()
+    if keyState[pygame.K_e]:
+        speed += 1
+    if keyState[pygame.K_r]:
+        speed -= 1
+
+    now = time.time()
+    if prev_time != 0:
+        dt = now - prev_time
     yOne = max(0, min(yOne, screen.get_height() - 200))
     yTwo = max(0, min(yTwo, screen.get_height() - 200))
 
     player1 = pygame.Rect(screen.get_width() - 100, yOne, 25, 200)
+    player1Clone = pygame.Rect(screen.get_width()-75, yOne, 1000, 200)
     player2 = pygame.Rect(100, yTwo, 25, 200)
+    player2Clone = pygame.Rect(-900, yTwo, 1000, 200)
     ball = pygame.Rect(x, y, 20, 20)
-
+    
     colide1 = ball.colliderect(player1)
+    if colide1 == False:
+        colide1 = ball.colliderect(player1Clone)
     colide2 = ball.colliderect(player2)
+    if colide2 == False:
+        colide2 = ball.colliderect(player2Clone)
     if colide1:
         intersectY = y - ((x - (yOne + 200)) * y) / x
-        relativeIntersectY = (yOne+(200/2)) - intersectY
-        normalizedRelativeIntersectionY = (relativeIntersectY/(200/2))
+        relativeIntersectY = (yOne + (200 / 2)) - intersectY
+        normalizedRelativeIntersectionY = (relativeIntersectY / (200 / 2))
         bounceAngle = normalizedRelativeIntersectionY * 75
         bounceAngleY = bounceAngleX = bounceAngle
         if flip == False:
@@ -77,8 +94,8 @@ while running:
         flip = True
     elif colide2:
         intersectY = y - ((x - (yOne + 200)) * y) / x
-        relativeIntersectY = (yOne+(200/2)) - intersectY
-        normalizedRelativeIntersectionY = (relativeIntersectY/(200/2))
+        relativeIntersectY = (yOne + (200 / 2)) - intersectY
+        normalizedRelativeIntersectionY = (relativeIntersectY / (200 / 2))
         bounceAngle = normalizedRelativeIntersectionY * 75
         bounceAngleY = bounceAngleX = bounceAngle
         if flip == True:
@@ -86,16 +103,17 @@ while running:
             speed += 1
         flip = False
 
-    x += speed*math.cos(bounceAngleX)
-    y += speed*-math.sin(bounceAngleY)
+    x += speed * math.cos(bounceAngleX) * targetFPS * dt
+    y += speed * -math.sin(bounceAngleY) * targetFPS * dt
+    
     if y <= 0 or y >= screen.get_height() - 20:
         bounceAngleY *= -1
 
     # Very icky ties movement speed to FPS. Fixed by limiting FPS to 60
     # Multithreading Don't ask I don't know
     # https://www.toptal.com/python/beginners-guide-to-concurrency-and-parallelism-in-python
-    yTwo += getInputKeyboard(1) * 0.025 * sensitivity
-    yOne += getInputKeyboard(2) * 0.025 * sensitivity
+    yTwo += getInputKeyboard(1) * 0.025 * sensitivity * targetFPS * dt
+    yOne += getInputKeyboard(2) * 0.025 * sensitivity * targetFPS * dt
 
     if x <= 0:
         score2 += 1
@@ -122,16 +140,23 @@ while running:
     # Draws padles
     pygame.draw.rect(screen, (0, 0, 255), player1)
     pygame.draw.rect(screen, (255, 0, 0), player2)
+    # pygame.draw.rect(screen, (0, 0, 0), player1Clone)
+    # pygame.draw.rect(screen, (0, 0, 0), player2Clone)
 
     # FPS counter
     screen.blit(update_fps(), (20, 20))
     screen.blit(font.render("flip: "+str(flip), 1, (255, 0, 0)), (200, 20))
+    screen.blit(font.render("speed: "+str(speed), 1, (255, 0, 0)), (200, 40))
     screen.blit(font.render("score1: "+str(score1), 1, (255, 0, 0)), (300, 20))
     screen.blit(font.render("score2: "+str(score2), 1, (255, 0, 0)), (300, 40))
+    screen.blit(font.render("x: " + str(x), 1, (255, 0, 0)), (400, 20))
+    screen.blit(font.render("y: " + str(y), 1, (255, 0, 0)), (400, 40))
+    screen.blit(font.render("time: " + str(now), 1, (255, 0, 0)), (600, 20))
+    screen.blit(font.render("prev_Time: " + str(prev_time), 1, (255, 0, 0)), (600, 40))
 
     # Caps the FPS to 60
-    clock.tick(60)
-
+    clock.tick(120)
+    prev_time = now
     pygame.display.update()
 
 pygame.quit()
