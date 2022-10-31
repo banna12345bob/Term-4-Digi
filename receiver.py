@@ -28,6 +28,7 @@ def getInputMicrobit(channel):
             if incoming[1] == "y":
                 yIn = int(incoming[2:len(incoming)])-19
                 print(yIn)
+                return yIn
         return 0
     except:
         return 0
@@ -55,7 +56,7 @@ yOne = yTwo = screen.get_height() / 2 - 100
 x, y = screen.get_width() / 2 - 20, screen.get_height() / 2 - 20
 running, flip = True, False
 bounceAngle = bounceAngleY = bounceAngleX = score1 = score2 = 0
-dt = now = prev_time = 0
+dt = now = prev_time = cooldown = 0
 targetFPS = 60
 while running:
     keyState = pygame.key.get_pressed()
@@ -71,17 +72,19 @@ while running:
     yTwo = max(0, min(yTwo, screen.get_height() - 200))
 
     player1 = pygame.Rect(screen.get_width() - 100, yOne, 25, 200)
-    player1Clone = pygame.Rect(screen.get_width()-75, yOne, 1000, 200)
     player2 = pygame.Rect(100, yTwo, 25, 200)
-    player2Clone = pygame.Rect(-900, yTwo, 1000, 200)
+    player1Clone = pygame.Rect(screen.get_width()-100, yOne, 1000, 200)
+    player2Clone = pygame.Rect(-875, yTwo, 1000, 200)
     ball = pygame.Rect(x, y, 20, 20)
     
-    colide1 = ball.colliderect(player1)
-    if colide1 == False:
+    if cooldown > 10:
         colide1 = ball.colliderect(player1Clone)
-    colide2 = ball.colliderect(player2)
-    if colide2 == False:
         colide2 = ball.colliderect(player2Clone)
+    else:
+        colide1 = colide2 = False
+    if colide1 or colide2:
+        cooldown = 0
+        
     if colide1:
         intersectY = y - ((x - (yOne + 200)) * y) / x
         relativeIntersectY = (yOne + (200 / 2)) - intersectY
@@ -107,7 +110,9 @@ while running:
     y += speed * -math.sin(bounceAngleY) * targetFPS * dt
     
     if y <= 0 or y >= screen.get_height() - 20:
-        bounceAngleY *= -1
+        if cooldown > 4:
+            bounceAngleY *= -1
+            cooldown = 0
 
     # Very icky ties movement speed to FPS. Fixed by limiting FPS to 60
     # Multithreading Don't ask I don't know
@@ -140,8 +145,8 @@ while running:
     # Draws padles
     pygame.draw.rect(screen, (0, 0, 255), player1)
     pygame.draw.rect(screen, (255, 0, 0), player2)
-    # pygame.draw.rect(screen, (0, 0, 0), player1Clone)
-    # pygame.draw.rect(screen, (0, 0, 0), player2Clone)
+    # pygame.draw.rect(screen, (0, 255, 0), player1Clone)
+    # pygame.draw.rect(screen, (0, 255, 0), player2Clone)
 
     # FPS counter
     screen.blit(update_fps(), (20, 20))
@@ -153,9 +158,10 @@ while running:
     screen.blit(font.render("y: " + str(y), 1, (255, 0, 0)), (400, 40))
     screen.blit(font.render("time: " + str(now), 1, (255, 0, 0)), (600, 20))
     screen.blit(font.render("prev_Time: " + str(prev_time), 1, (255, 0, 0)), (600, 40))
-
-    # Caps the FPS to 60
-    clock.tick(120)
+    screen.blit(font.render("cooldown: " + str(cooldown), 1, (255, 0, 0)), (850, 20))
+    
+    cooldown += 1
+    clock.tick(0)
     prev_time = now
     pygame.display.update()
 
