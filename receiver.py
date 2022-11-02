@@ -1,7 +1,5 @@
 # from bitio.src import microbit
-import math
-import pygame
-import time
+import math, pygame, time, threading
 
 # https://gamedev.stackexchange.com/questions/4253/in-pong-how-do-you-calculate-the-balls-direction-when-it-bounces-off-the-paddl
 # https://stackoverflow.com/questions/29640685/how-do-i-detect-collision-in-pygame
@@ -16,6 +14,21 @@ def update_fps():
 	fps = str(int(clock.get_fps()))
 	fps_text = font.render(fps, 1, (255, 0, 0))
 	return fps_text
+
+class ThreadWithReturnValue(threading.Thread):
+    
+    def __init__(self, group=None, target=None, name=None,
+                 args=(), kwargs={}, Verbose=None):
+        threading.Thread.__init__(self, group, target, name, args, kwargs)
+        self._return = None
+
+    def run(self):
+        if self._target is not None:
+            self._return = self._target(*self._args,
+                                                **self._kwargs)
+    def join(self, *args):
+        threading.Thread.join(self, *args)
+        return self._return
 
 def getInputMicrobit(channel):
     microbit.radio.on()
@@ -50,13 +63,14 @@ def getInputKeyboard(channel):
             return 50 * sensitivity
     return 0
 
-sensitivity, speed = 5, 5
+sensitivity, speed = 5, 7
 yIn1 = yIn2 = 0
 yOne = yTwo = screen.get_height() / 2 - 100
 x, y = screen.get_width() / 2 - 20, screen.get_height() / 2 - 20
 running, flip = True, False
 bounceAngle = bounceAngleY = bounceAngleX = score1 = score2 = 0
 dt = now = prev_time = cooldown = 0
+paddleHeight = 200
 targetFPS = 60
 while running:
     keyState = pygame.key.get_pressed()
@@ -68,18 +82,17 @@ while running:
     now = time.time()
     if prev_time != 0:
         dt = now - prev_time
-    yOne = max(0, min(yOne, screen.get_height() - 200))
-    yTwo = max(0, min(yTwo, screen.get_height() - 200))
+    yOne = max(0, min(yOne, screen.get_height() - paddleHeight))
+    yTwo = max(0, min(yTwo, screen.get_height() - paddleHeight))
 
-    player1 = pygame.Rect(screen.get_width() - 100, yOne, 25, 200)
-    player2 = pygame.Rect(100, yTwo, 25, 200)
-    player1Clone = pygame.Rect(screen.get_width()-100, yOne, 1000, 200)
-    player2Clone = pygame.Rect(-875, yTwo, 1000, 200)
+    player1 = pygame.Rect(screen.get_width() - 100, yOne, 25, paddleHeight)
+    player2 = pygame.Rect(100, yTwo, 25, paddleHeight)
     ball = pygame.Rect(x, y, 20, 20)
-    
-    if cooldown > 10:
-        colide1 = ball.colliderect(player1Clone)
-        colide2 = ball.colliderect(player2Clone)
+
+    if x > screen.get_width() - 100 and yOne <= y <= yOne + paddleHeight and cooldown > 25:
+        colide1 = True
+    elif x < 100 and yTwo <= y <= yTwo + paddleHeight and cooldown > 25:
+        colide2 = True
     else:
         colide1 = colide2 = False
     if colide1 or colide2:
@@ -117,14 +130,18 @@ while running:
     # Very icky ties movement speed to FPS. Fixed by limiting FPS to 60
     # Multithreading Don't ask I don't know
     # https://www.toptal.com/python/beginners-guide-to-concurrency-and-parallelism-in-python
-    yTwo += getInputKeyboard(1) * 0.025 * sensitivity * targetFPS * dt
-    yOne += getInputKeyboard(2) * 0.025 * sensitivity * targetFPS * dt
+    thread1 = ThreadWithReturnValue(target=getInputKeyboard, args=(1,))
+    thread2 = ThreadWithReturnValue(target=getInputKeyboard, args=(2,))
+    thread1.start()
+    thread2.start()
+    yTwo += thread1.join() * 0.025 * sensitivity * targetFPS * dt
+    yOne += thread2.join() * 0.025 * sensitivity * targetFPS * dt
 
     if x <= 0:
         score2 += 1
         x, y = screen.get_width() / 2 - 20, screen.get_height() / 2 - 20
         yOne = yTwo = screen.get_height() / 2 - 100
-        speed = 5
+        speed = 7
         bounceAngle = bounceAngleY = bounceAngleX = 0
     if x >= screen.get_width():
         score1 += 1
@@ -132,7 +149,7 @@ while running:
         yOne = yTwo = screen.get_height() / 2 - 100
         bounceAngle = bounceAngleY = 0
         bounceAngleX = 180
-        speed = 5
+        speed = 7
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -145,8 +162,6 @@ while running:
     # Draws padles
     pygame.draw.rect(screen, (0, 0, 255), player1)
     pygame.draw.rect(screen, (255, 0, 0), player2)
-    # pygame.draw.rect(screen, (0, 255, 0), player1Clone)
-    # pygame.draw.rect(screen, (0, 255, 0), player2Clone)
 
     # FPS counter
     screen.blit(update_fps(), (20, 20))
