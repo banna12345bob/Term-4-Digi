@@ -1,4 +1,4 @@
-# from bitio.src import microbit
+from bitio.src import microbit
 import math, pygame, time, threading
 
 # https://gamedev.stackexchange.com/questions/4253/in-pong-how-do-you-calculate-the-balls-direction-when-it-bounces-off-the-paddl
@@ -30,7 +30,7 @@ class ThreadWithReturnValue(threading.Thread):
         threading.Thread.join(self, *args)
         return self._return
 
-def getInputMicrobit(channel):
+def getInputMicrobitRadio(channel):
     microbit.radio.on()
     microbit.radio.config(channel=channel)
     incoming = microbit.radio.receive_bytes()
@@ -43,6 +43,18 @@ def getInputMicrobit(channel):
                 print(yIn)
                 return yIn
         return 0
+    except:
+        return 0
+
+def getInputMicrobit(channel):
+    incoming = 0
+    try:
+        if channel == 1:
+            incoming = microbit.pin0.read_analog() - 495 + 6
+        elif channel == 2:
+            incoming = microbit.pin1.read_analog() - 495 - 18
+        yIn = int(incoming)
+        return yIn
     except:
         return 0
 
@@ -63,7 +75,7 @@ def getInputKeyboard(channel):
             return 50 * sensitivity
     return 0
 
-sensitivity, speed = 5, 7
+sensitivity, speed = 1, 7
 yIn1 = yIn2 = 0
 yOne = yTwo = screen.get_height() / 2 - 100
 x, y = screen.get_width() / 2 - 20, screen.get_height() / 2 - 20
@@ -128,14 +140,8 @@ while running:
             cooldown = 0
 
     # Very icky ties movement speed to FPS. Fixed by limiting FPS to 60
-    # Multithreading Don't ask I don't know
-    # https://www.toptal.com/python/beginners-guide-to-concurrency-and-parallelism-in-python
-    thread1 = ThreadWithReturnValue(target=getInputKeyboard, args=(1,))
-    thread2 = ThreadWithReturnValue(target=getInputKeyboard, args=(2,))
-    thread1.start()
-    thread2.start()
-    yTwo += thread1.join() * 0.025 * sensitivity * targetFPS * dt
-    yOne += thread2.join() * 0.025 * sensitivity * targetFPS * dt
+    yTwo += getInputMicrobit(1) * 0.025 * sensitivity * targetFPS * dt
+    yOne += getInputMicrobit(2) * 0.025 * sensitivity * targetFPS * dt
 
     if x <= 0:
         score2 += 1

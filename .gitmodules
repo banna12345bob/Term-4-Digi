@@ -3,7 +3,7 @@
 	url = https://github.com/PhonicCanine/microbit
 [submodule "bitio"]
 	path = bitio
-	url = https://github.com/whaleygeek/bitio
+	url = https://github.com/banna12345bob/bitio
 [submodule "pygame"]
 	path = pygame
 	url = https://github.com/pygame/pygame
