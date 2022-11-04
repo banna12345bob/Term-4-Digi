@@ -48,15 +48,12 @@ def getInputMicrobitRadio(channel):
 
 def getInputMicrobit(channel):
     incoming = 0
-    try:
-        if channel == 1:
-            incoming = microbit.pin0.read_analog() - 495 + 6
-        elif channel == 2:
-            incoming = microbit.pin1.read_analog() - 495 - 18
-        yIn = int(incoming)
-        return yIn
-    except:
-        return 0
+    if channel == 1:
+        incoming = microbit.pin0.read_analog() - 495 + 6
+    elif channel == 2:
+        incoming = microbit.pin1.read_analog() - 495 - 18
+    yIn = int(incoming)
+    return yIn
 
 def getInputKeyboard(channel):
     keyState = pygame.key.get_pressed()
@@ -140,8 +137,12 @@ while running:
             cooldown = 0
 
     # Very icky ties movement speed to FPS. Fixed by limiting FPS to 60
-    yTwo += getInputMicrobit(1) * 0.025 * sensitivity * targetFPS * dt
-    yOne += getInputMicrobit(2) * 0.025 * sensitivity * targetFPS * dt
+    thread1 = ThreadWithReturnValue(target=getInputMicrobit, args=(1,))
+    thread2 = ThreadWithReturnValue(target=getInputMicrobit, args=(2,))
+    thread1.start()
+    thread2.start()
+    yTwo += thread1.join() * 0.025 * sensitivity * targetFPS * dt
+    yOne += thread2.join() * 0.025 * sensitivity * targetFPS * dt
 
     if x <= 0:
         score2 += 1
