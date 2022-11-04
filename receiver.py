@@ -137,12 +137,16 @@ while running:
             cooldown = 0
 
     # Very icky ties movement speed to FPS. Fixed by limiting FPS to 60
-    thread1 = ThreadWithReturnValue(target=getInputMicrobit, args=(1,))
-    thread2 = ThreadWithReturnValue(target=getInputMicrobit, args=(2,))
-    thread1.start()
-    thread2.start()
-    yTwo += thread1.join() * 0.025 * sensitivity * targetFPS * dt
-    yOne += thread2.join() * 0.025 * sensitivity * targetFPS * dt
+    try:
+        thread1 = ThreadWithReturnValue(target=getInputMicrobit, args=(1,))
+        thread2 = ThreadWithReturnValue(target=getInputMicrobit, args=(2,))
+        thread1.start()
+        thread2.start()
+        yTwo += thread1.join() * 0.025 * sensitivity * targetFPS * dt
+        yOne += thread2.join() * 0.025 * sensitivity * targetFPS * dt
+    except:
+        yTwo += yTwo
+        yOne += yOne
 
     if x <= 0:
         score2 += 1
