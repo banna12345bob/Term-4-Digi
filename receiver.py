@@ -57,22 +57,21 @@ def getInputMicrobit(channel):
 
 def getInputKeyboard(channel):
     keyState = pygame.key.get_pressed()
-    sensitivity = 1
     if keyState[pygame.K_DOWN]:
         if channel == 2:
-            return 50 * sensitivity
+            return 50
     if keyState[pygame.K_UP]:
         if channel == 2:
-            return -50 * sensitivity
+            return -50
     if keyState[pygame.K_w]:
         if channel == 1:
-            return -50 * sensitivity
+            return -50
     if keyState[pygame.K_s]:
         if channel == 1:
-            return 50 * sensitivity
+            return 50
     return 0
 
-sensitivity, speed = 1, 7
+sensitivity, speed = 5, 7
 yIn1 = yIn2 = 0
 yOne = yTwo = screen.get_height() / 2 - 100
 x, y = screen.get_width() / 2 - 20, screen.get_height() / 2 - 20
