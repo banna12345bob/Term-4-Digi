@@ -1,6 +1,6 @@
 from bitio.src import microbit
 import math, pygame, time
-
+# I'm sorry
 # https://stackoverflow.com/questions/29640685/how-do-i-detect-collision-in-pygame
 pygame.init()
 screen = pygame.display.set_mode(flags=pygame.FULLSCREEN)
@@ -18,11 +18,10 @@ def update_fps():
 def getInputMicrobit(channel):
     incoming = 0
     if channel == 1:
-        incoming = microbit.pin0.read_analog() - 495 + 6
+        incoming = microbit.pin0.read_analog() - 489
     elif channel == 2:
-        incoming = microbit.pin1.read_analog() - 495 - 18
-    yIn = int(incoming)
-    return yIn
+        incoming = microbit.pin1.read_analog() - 513
+    return incoming
 
 def getInputKeyboard(channel):
     keyState = pygame.key.get_pressed()
@@ -41,11 +40,10 @@ def getInputKeyboard(channel):
     return 0
 
 sensitivity, speed = 1, 7
-yIn1 = yIn2 = 0
 yOne = yTwo = screen.get_height() / 2 - 100
 x, y = screen.get_width() / 2 - 20, screen.get_height() / 2 - 20
 running, flip = True, False
-bounceAngle = bounceAngleY = bounceAngleX = score1 = score2 = 0
+bounceAngleY = bounceAngleX = score1 = score2 = 0
 dt = now = prev_time = cooldown = 0
 paddleHeight = 200
 targetFPS = 60
@@ -103,12 +101,12 @@ while running:
 
     player1 = pygame.Rect(screen.get_width() - 100, yOne, 25, paddleHeight)
     player2 = pygame.Rect(100, yTwo, 25, paddleHeight)
-    player1Clone = pygame.Rect(screen.get_width()-100, yOne, 1000, 200)
-    player2Clone = pygame.Rect(-875, yTwo, 1000, 200)
+    player1Colide = pygame.Rect(screen.get_width()-100, yOne, 1000, 200)
+    player2Clolide = pygame.Rect(-875, yTwo, 1000, 200)
     ball = pygame.Rect(x, y, 20, 20)
 
     # https://gamedev.stackexchange.com/questions/4253/in-pong-how-do-you-calculate-the-balls-direction-when-it-bounces-off-the-paddl
-    if ball.colliderect(player1Clone) and cooldown > paddleCooldown:
+    if ball.colliderect(player1Colide) and cooldown > paddleCooldown:
         intersectY = y - ((x - (100 + 25)) * (y)) / (x)
         relativeIntersectY = (yOne + (paddleHeight / 2)) - intersectY
         normalizedRelativeIntersectionY = (relativeIntersectY / (paddleHeight / 2))
@@ -118,7 +116,7 @@ while running:
             speed += 1
             flip = True
         cooldown = 0
-    elif ball.colliderect(player2Clone) and cooldown > paddleCooldown:
+    elif ball.colliderect(player2Clolide) and cooldown > paddleCooldown:
         intersectY = y - ((x - (100 + 25)) * (y)) / (x)
         relativeIntersectY = (yTwo + (paddleHeight / 2)) - intersectY
         normalizedRelativeIntersectionY = (relativeIntersectY / (paddleHeight/2))
@@ -137,12 +135,8 @@ while running:
         cooldown = 0
 
     # Very icky ties movement speed to FPS. Fixed by limiting FPS to 60
-    try:
-        yTwo += getInputMicrobit(1) * 0.025 * sensitivity * targetFPS * dt
-        yOne += getInputMicrobit(2) * 0.025 * sensitivity * targetFPS * dt
-    except:
-        yTwo = yTwo
-        yOne = yOne
+    yTwo += getInputMicrobit(1) * 0.025 * sensitivity * targetFPS * dt
+    yOne += getInputMicrobit(2) * 0.025 * sensitivity * targetFPS * dt
 
     if x <= 0:
         score2 += 1
@@ -170,8 +164,8 @@ while running:
     pygame.draw.rect(screen, (255, 255, 255), player1)
     pygame.draw.rect(screen, (255, 255, 255), player2)
     if showColider == True:
-        pygame.draw.rect(screen, (0, 255, 0), player1Clone)
-        pygame.draw.rect(screen, (0, 255, 0), player2Clone)
+        pygame.draw.rect(screen, (0, 255, 0), player1Colide)
+        pygame.draw.rect(screen, (0, 255, 0), player2Clolide)
 
     # FPS counter
     if debug:
