@@ -2,3 +2,6 @@
 	path = microbit
 	url = https://github.com/PhonicCanine/microbit
 
+[submodule "Pong/bitio"]
+	path = Pong/bitio
+	url = https://github.com/banna12345bob/bitio
