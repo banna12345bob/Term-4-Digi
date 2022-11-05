@@ -4,7 +4,8 @@ import math, pygame, time, threading
 # https://gamedev.stackexchange.com/questions/4253/in-pong-how-do-you-calculate-the-balls-direction-when-it-bounces-off-the-paddl
 # https://stackoverflow.com/questions/29640685/how-do-i-detect-collision-in-pygame
 pygame.init()
-screen = pygame.display.set_mode(flags=pygame.FULLSCREEN)
+screen = pygame.display.set_mode()
+# screen = pygame.display.set_mode(flags=pygame.FULLSCREEN)
 clock = pygame.time.Clock()
 
 # Displays text that says hello in green
@@ -59,19 +60,19 @@ def getInputKeyboard(channel):
     keyState = pygame.key.get_pressed()
     if keyState[pygame.K_DOWN]:
         if channel == 2:
-            return 50
+            return 250
     if keyState[pygame.K_UP]:
         if channel == 2:
-            return -50
+            return -250
     if keyState[pygame.K_w]:
         if channel == 1:
-            return -50
+            return -250
     if keyState[pygame.K_s]:
         if channel == 1:
-            return 50
+            return 250
     return 0
 
-sensitivity, speed = 5, 7
+sensitivity, speed = 1, 7
 yIn1 = yIn2 = 0
 yOne = yTwo = screen.get_height() / 2 - 100
 x, y = screen.get_width() / 2 - 20, screen.get_height() / 2 - 20
@@ -80,6 +81,7 @@ bounceAngle = bounceAngleY = bounceAngleX = score1 = score2 = 0
 dt = now = prev_time = cooldown = 0
 paddleHeight = 200
 targetFPS = 60
+paddleCooldown, edgeCooldown = 20, 4
 while running:
     keyState = pygame.key.get_pressed()
     if keyState[pygame.K_e]:
@@ -97,9 +99,9 @@ while running:
     player2 = pygame.Rect(100, yTwo, 25, paddleHeight)
     ball = pygame.Rect(x, y, 20, 20)
 
-    if x > screen.get_width() - 100 and yOne <= y <= yOne + paddleHeight and cooldown > 25:
+    if x > screen.get_width() - 100 and y  in range(int(yOne), int(yOne + paddleHeight)) and cooldown > paddleCooldown:
         colide1 = True
-    elif x < 100 and yTwo <= y <= yTwo + paddleHeight and cooldown > 25:
+    elif x < 100 and yTwo <= y <= yTwo + paddleHeight and cooldown > paddleCooldown:
         colide2 = True
     else:
         colide1 = colide2 = False
@@ -107,45 +109,38 @@ while running:
         cooldown = 0
         
     if colide1:
-        intersectY = y - ((x - (yOne + 200)) * y) / x
-        relativeIntersectY = (yOne + (200 / 2)) - intersectY
-        normalizedRelativeIntersectionY = (relativeIntersectY / (200 / 2))
+        intersectY = y - ((x - (100 + 25)) * (y)) / (x)
+        relativeIntersectY = (yOne + (paddleHeight / 2)) - intersectY
+        normalizedRelativeIntersectionY = (relativeIntersectY / (paddleHeight / 2))
         bounceAngle = normalizedRelativeIntersectionY * 75
         bounceAngleY = bounceAngleX = bounceAngle
         if flip == False:
-            bounceAngleX *= -1
             speed += 1
-        flip = True
+            flip = True
     elif colide2:
-        intersectY = y - ((x - (yOne + 200)) * y) / x
-        relativeIntersectY = (yOne + (200 / 2)) - intersectY
-        normalizedRelativeIntersectionY = (relativeIntersectY / (200 / 2))
+        intersectY = y - ((x - (100 + 25)) * (y)) / (x)
+        relativeIntersectY = (yTwo + (paddleHeight / 2)) - intersectY
+        normalizedRelativeIntersectionY = (relativeIntersectY / (paddleHeight/2))
         bounceAngle = normalizedRelativeIntersectionY * 75
         bounceAngleY = bounceAngleX = bounceAngle
         if flip == True:
-            bounceAngleX *= -1
             speed += 1
-        flip = False
+            flip = False
 
     x += speed * math.cos(bounceAngleX) * targetFPS * dt
     y += speed * -math.sin(bounceAngleY) * targetFPS * dt
     
-    if y <= 0 or y >= screen.get_height() - 20:
-        if cooldown > 4:
-            bounceAngleY *= -1
-            cooldown = 0
+    if y <= 0 or y >= screen.get_height() - 20 and cooldown > edgeCooldown:
+        bounceAngleY *= -1
+        cooldown = 0
 
     # Very icky ties movement speed to FPS. Fixed by limiting FPS to 60
     try:
-        thread1 = ThreadWithReturnValue(target=getInputMicrobit, args=(1,))
-        thread2 = ThreadWithReturnValue(target=getInputMicrobit, args=(2,))
-        thread1.start()
-        thread2.start()
-        yTwo += thread1.join() * 0.025 * sensitivity * targetFPS * dt
-        yOne += thread2.join() * 0.025 * sensitivity * targetFPS * dt
+        yTwo += getInputMicrobit(1) * 0.025 * sensitivity * targetFPS * dt
+        yOne += getInputMicrobit(2) * 0.025 * sensitivity * targetFPS * dt
     except:
-        yTwo += yTwo
-        yOne += yOne
+        yTwo = yTwo
+        yOne = yOne
 
     if x <= 0:
         score2 += 1
@@ -178,7 +173,7 @@ while running:
     screen.blit(font.render("flip: "+str(flip), 1, (255, 0, 0)), (200, 20))
     screen.blit(font.render("speed: "+str(speed), 1, (255, 0, 0)), (200, 40))
     screen.blit(font.render("score1: "+str(score1), 1, (255, 0, 0)), (300, 20))
-    screen.blit(font.render("score2: "+str(score2), 1, (255, 0, 0)), (300, 40))
+    screen.blit(font.render("score2: "+str(score2), 1, (0, 0, 255)), (300, 40))
     screen.blit(font.render("x: " + str(x), 1, (255, 0, 0)), (400, 20))
     screen.blit(font.render("y: " + str(y), 1, (255, 0, 0)), (400, 40))
     screen.blit(font.render("time: " + str(now), 1, (255, 0, 0)), (600, 20))
@@ -186,7 +181,7 @@ while running:
     screen.blit(font.render("cooldown: " + str(cooldown), 1, (255, 0, 0)), (850, 20))
     
     cooldown += 1
-    clock.tick(0)
+    clock.tick(30)
     prev_time = now
     pygame.display.update()
 
