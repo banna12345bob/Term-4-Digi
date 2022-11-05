@@ -1,6 +1,4 @@
 [submodule "microbit"]
 	path = microbit
 	url = https://github.com/PhonicCanine/microbit
-[submodule "pong/bitio"]
-	path = pong/bitio
-	url = https://github.com/banna12345bob/bitio
+
