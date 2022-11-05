@@ -1,51 +1,19 @@
 from bitio.src import microbit
-import math, pygame, time, threading
+import math, pygame, time
 
-# https://gamedev.stackexchange.com/questions/4253/in-pong-how-do-you-calculate-the-balls-direction-when-it-bounces-off-the-paddl
 # https://stackoverflow.com/questions/29640685/how-do-i-detect-collision-in-pygame
 pygame.init()
-screen = pygame.display.set_mode()
-# screen = pygame.display.set_mode(flags=pygame.FULLSCREEN)
+screen = pygame.display.set_mode(flags=pygame.FULLSCREEN)
 clock = pygame.time.Clock()
 
 # Displays text that says hello in green
 font = pygame.font.SysFont(None, 24)
+scoreFont = pygame.font.SysFont(None, 100)
 
 def update_fps():
 	fps = str(int(clock.get_fps()))
 	fps_text = font.render(fps, 1, (255, 0, 0))
 	return fps_text
-
-class ThreadWithReturnValue(threading.Thread):
-    
-    def __init__(self, group=None, target=None, name=None,
-                 args=(), kwargs={}, Verbose=None):
-        threading.Thread.__init__(self, group, target, name, args, kwargs)
-        self._return = None
-
-    def run(self):
-        if self._target is not None:
-            self._return = self._target(*self._args,
-                                                **self._kwargs)
-    def join(self, *args):
-        threading.Thread.join(self, *args)
-        return self._return
-
-def getInputMicrobitRadio(channel):
-    microbit.radio.on()
-    microbit.radio.config(channel=channel)
-    incoming = microbit.radio.receive_bytes()
-    microbit.radio.off()
-    incoming = incoming[2:-1]
-    try:
-        if incoming[0] == str(channel):
-            if incoming[1] == "y":
-                yIn = int(incoming[2:len(incoming)])-19
-                print(yIn)
-                return yIn
-        return 0
-    except:
-        return 0
 
 def getInputMicrobit(channel):
     incoming = 0
@@ -81,34 +49,66 @@ bounceAngle = bounceAngleY = bounceAngleX = score1 = score2 = 0
 dt = now = prev_time = cooldown = 0
 paddleHeight = 200
 targetFPS = 60
-paddleCooldown, edgeCooldown = 20, 4
+paddleCooldown, edgeCooldown = 20, 5
+showColider = showAdvanced = showPos = showTime = False
+debug = False
+dCooldown = 30
+
 while running:
-    keyState = pygame.key.get_pressed()
-    if keyState[pygame.K_e]:
-        speed += 1
-    if keyState[pygame.K_r]:
-        speed -= 1
+    if debug:
+        # Debug stuff Only applies if in debug mode
+        dCooldown += 1
+        keyState = pygame.key.get_pressed()
+        keyRepeat = pygame.key.get_repeat()
+        if keyState[pygame.K_e] and dCooldown > 5:
+            speed += 1
+            dCooldown = 0
+        if keyState[pygame.K_r] and dCooldown > 5:
+            speed -= 1
+            dCooldown = 0
+        if keyState[pygame.K_h] and dCooldown > 5:
+            # Ew ew gross don't do this but it works
+            if showAdvanced == False and showColider == False and showPos == False and showTime == False:
+                showAdvanced = True
+                dCooldown = 0
+            elif showAdvanced == True and showColider == False and showPos == False and showTime == False:
+                showAdvanced = False
+                dCooldown = 0
+            if showAdvanced == False and showColider == False and showPos == False and showTime == False:
+                showPos = True
+                dCooldown = 0
+            elif showAdvanced == False and showColider == False and showPos == True and showTime == False:
+                showPos = False
+                dCooldown = 0
+            if showAdvanced == False and showColider == False and showPos == False and showTime == False:
+                showTime = True
+                dCooldown = 0
+            elif showAdvanced == False and showColider == False and showPos == False and showTime == True:
+                showTime = False
+                dCooldown = 0
+            if showColider == False and showAdvanced == False and showPos == False and showTime == False:
+                dCooldown = 0
+                showColider = True
+            elif showColider == True and showAdvanced == False and showPos == False and showTime == False:
+                dCooldown = 0
+                showColider = False
+
 
     now = time.time()
     if prev_time != 0:
         dt = now - prev_time
+
     yOne = max(0, min(yOne, screen.get_height() - paddleHeight))
     yTwo = max(0, min(yTwo, screen.get_height() - paddleHeight))
 
     player1 = pygame.Rect(screen.get_width() - 100, yOne, 25, paddleHeight)
     player2 = pygame.Rect(100, yTwo, 25, paddleHeight)
+    player1Clone = pygame.Rect(screen.get_width()-100, yOne, 1000, 200)
+    player2Clone = pygame.Rect(-875, yTwo, 1000, 200)
     ball = pygame.Rect(x, y, 20, 20)
 
-    if x > screen.get_width() - 100 and y  in range(int(yOne), int(yOne + paddleHeight)) and cooldown > paddleCooldown:
-        colide1 = True
-    elif x < 100 and yTwo <= y <= yTwo + paddleHeight and cooldown > paddleCooldown:
-        colide2 = True
-    else:
-        colide1 = colide2 = False
-    if colide1 or colide2:
-        cooldown = 0
-        
-    if colide1:
+    # https://gamedev.stackexchange.com/questions/4253/in-pong-how-do-you-calculate-the-balls-direction-when-it-bounces-off-the-paddl
+    if ball.colliderect(player1Clone) and cooldown > paddleCooldown:
         intersectY = y - ((x - (100 + 25)) * (y)) / (x)
         relativeIntersectY = (yOne + (paddleHeight / 2)) - intersectY
         normalizedRelativeIntersectionY = (relativeIntersectY / (paddleHeight / 2))
@@ -117,7 +117,8 @@ while running:
         if flip == False:
             speed += 1
             flip = True
-    elif colide2:
+        cooldown = 0
+    elif ball.colliderect(player2Clone) and cooldown > paddleCooldown:
         intersectY = y - ((x - (100 + 25)) * (y)) / (x)
         relativeIntersectY = (yTwo + (paddleHeight / 2)) - intersectY
         normalizedRelativeIntersectionY = (relativeIntersectY / (paddleHeight/2))
@@ -126,6 +127,7 @@ while running:
         if flip == True:
             speed += 1
             flip = False
+        cooldown = 0
 
     x += speed * math.cos(bounceAngleX) * targetFPS * dt
     y += speed * -math.sin(bounceAngleY) * targetFPS * dt
@@ -165,20 +167,32 @@ while running:
     # Draws ball
     pygame.draw.rect(screen, (255, 255, 255), ball)
     # Draws padles
-    pygame.draw.rect(screen, (0, 0, 255), player1)
-    pygame.draw.rect(screen, (255, 0, 0), player2)
+    pygame.draw.rect(screen, (255, 255, 255), player1)
+    pygame.draw.rect(screen, (255, 255, 255), player2)
+    if showColider == True:
+        pygame.draw.rect(screen, (0, 255, 0), player1Clone)
+        pygame.draw.rect(screen, (0, 255, 0), player2Clone)
 
     # FPS counter
-    screen.blit(update_fps(), (20, 20))
-    screen.blit(font.render("flip: "+str(flip), 1, (255, 0, 0)), (200, 20))
-    screen.blit(font.render("speed: "+str(speed), 1, (255, 0, 0)), (200, 40))
-    screen.blit(font.render("score1: "+str(score1), 1, (255, 0, 0)), (300, 20))
-    screen.blit(font.render("score2: "+str(score2), 1, (0, 0, 255)), (300, 40))
-    screen.blit(font.render("x: " + str(x), 1, (255, 0, 0)), (400, 20))
-    screen.blit(font.render("y: " + str(y), 1, (255, 0, 0)), (400, 40))
-    screen.blit(font.render("time: " + str(now), 1, (255, 0, 0)), (600, 20))
-    screen.blit(font.render("prev_Time: " + str(prev_time), 1, (255, 0, 0)), (600, 40))
-    screen.blit(font.render("cooldown: " + str(cooldown), 1, (255, 0, 0)), (850, 20))
+    if debug:
+        screen.blit(update_fps(), (20, 20))
+    if showAdvanced:
+        screen.blit(font.render("flip: "+str(flip), 1, (255, 0, 0)), (200, 20))
+        screen.blit(font.render("speed: "+str(speed), 1, (255, 0, 0)), (200, 40))
+        screen.blit(font.render("Dubug mode: showAdvanced", 1, (255, 0, 0)), (screen.get_width() - 400, 40))
+    if showPos:
+        screen.blit(font.render("x: " + str(x), 1, (255, 0, 0)), (400, 20))
+        screen.blit(font.render("y: " + str(y), 1, (255, 0, 0)), (400, 40))
+        screen.blit(font.render("Dubug mode: showPos", 1, (255, 0, 0)), (screen.get_width() - 400, 40))
+    if showTime:
+        screen.blit(font.render("time: " + str(now), 1, (255, 0, 0)), (600, 20))
+        screen.blit(font.render("prev_Time: " + str(prev_time), 1, (255, 0, 0)), (600, 40))
+        screen.blit(font.render("cooldown: " + str(cooldown), 1, (255, 0, 0)), (850, 20))
+        screen.blit(font.render("Dubug mode: showTime", 1, (255, 0, 0)), (screen.get_width() - 400, 40))
+    if showColider:
+        screen.blit(font.render("Dubug mode: showColider", 1, (255, 0, 0)), (screen.get_width() - 400, 40))
+    screen.blit(scoreFont.render(str(score1), 1, (255, 255, 255)), (550, 100))
+    screen.blit(scoreFont.render(str(score2), 1, (255, 255, 255)), (screen.get_width() - 550, 100))
     
     cooldown += 1
     clock.tick(30)
