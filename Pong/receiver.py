@@ -1,6 +1,8 @@
 from bitio.src import microbit
 import math, pygame, time
+
 # I'm sorry
+
 # https://stackoverflow.com/questions/29640685/how-do-i-detect-collision-in-pygame
 pygame.init()
 screen = pygame.display.set_mode(flags=pygame.FULLSCREEN)
