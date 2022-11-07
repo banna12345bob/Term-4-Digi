@@ -49,7 +49,7 @@ bounceAngleY = bounceAngleX = score1 = score2 = 0
 dt = now = prev_time = cooldown = 0
 paddleHeight = 200
 targetFPS = 60
-paddleCooldown, edgeCooldown = 20, 5
+paddleCooldown, edgeCooldown = 0, 7
 showColider = showAdvanced = showPos = showTime = False
 debug = False
 dCooldown = 30
@@ -113,10 +113,11 @@ while running:
         relativeIntersectY = (yOne + (paddleHeight / 2)) - intersectY
         normalizedRelativeIntersectionY = (relativeIntersectY / (paddleHeight / 2))
         bounceAngle = normalizedRelativeIntersectionY * 75
-        bounceAngleY = bounceAngleX = bounceAngle
+        bounceAngleY = bounceAngle
         if flip == False:
             speed += 1
             flip = True
+            bounceAngleX = 180
         cooldown = 0
     elif ball.colliderect(player2Clolide) and cooldown > paddleCooldown:
         intersectY = y - ((x - (100 + 25)) * (y)) / (x)
@@ -127,6 +128,7 @@ while running:
         if flip == True:
             speed += 1
             flip = False
+            bounceAngleX = 0
         cooldown = 0
 
     x += speed * math.cos(bounceAngleX) * targetFPS * dt
@@ -146,6 +148,7 @@ while running:
         yOne = yTwo = screen.get_height() / 2 - 100
         speed = 7
         bounceAngle = bounceAngleY = bounceAngleX = 0
+        flip = False
     if x >= screen.get_width():
         score1 += 1
         x, y = screen.get_width() / 2 - 20, screen.get_height() / 2 - 20
@@ -153,6 +156,7 @@ while running:
         bounceAngle = bounceAngleY = 0
         bounceAngleX = 180
         speed = 7
+        flip = True
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
