@@ -103,8 +103,8 @@ while running:
 
     player1 = pygame.Rect(screen.get_width() - 100, yOne, 25, paddleHeight)
     player2 = pygame.Rect(100, yTwo, 25, paddleHeight)
-    player1Colide = pygame.Rect(screen.get_width()-100, yOne, 1000, 200)
-    player2Clolide = pygame.Rect(-875, yTwo, 1000, 200)
+    player1Colide = pygame.Rect(screen.get_width()-100, yOne, 1000, paddleHeight)
+    player2Clolide = pygame.Rect(-875, yTwo, 1000, paddleHeight)
     ball = pygame.Rect(x, y, 20, 20)
 
     # https://gamedev.stackexchange.com/questions/4253/in-pong-how-do-you-calculate-the-balls-direction-when-it-bounces-off-the-paddl
