@@ -20,9 +20,11 @@ def update_fps():
 def getInputMicrobit(channel):
     incoming = 0
     if channel == 1:
-        incoming = microbit.pin0.read_analog() - 489
+        incoming = microbit.pin0.read_analog() - 495
     elif channel == 2:
-        incoming = microbit.pin1.read_analog() - 513
+        incoming = microbit.pin1.read_analog() - 495
+    if 20 > incoming > -20:
+        incoming = 0
     return incoming
 
 def getInputKeyboard(channel):
@@ -119,6 +121,7 @@ while running:
             flip = True
             bounceAngleX = 180
         cooldown = 0
+        colide1 = True
     elif ball.colliderect(player2Clolide) and cooldown > paddleCooldown:
         intersectY = y - ((x - (100 + 25)) * (y)) / (x)
         relativeIntersectY = (yTwo + (paddleHeight / 2)) - intersectY
@@ -130,6 +133,9 @@ while running:
             flip = False
             bounceAngleX = 0
         cooldown = 0
+        colide2 = True
+    else:
+        colide1 = colide2 = False
 
     x += speed * math.cos(bounceAngleX) * targetFPS * dt
     y += speed * -math.sin(bounceAngleY) * targetFPS * dt
@@ -170,8 +176,14 @@ while running:
     pygame.draw.rect(screen, (255, 255, 255), player1)
     pygame.draw.rect(screen, (255, 255, 255), player2)
     if showColider == True:
-        pygame.draw.rect(screen, (0, 255, 0), player1Colide)
-        pygame.draw.rect(screen, (0, 255, 0), player2Clolide)
+        if not colide1:
+            pygame.draw.rect(screen, (0, 255, 0), player1Colide)
+        else:
+            pygame.draw.rect(screen, (255, 0, 0), player1Colide)
+        if not colide2:
+            pygame.draw.rect(screen, (0, 255, 0), player2Clolide)
+        else:
+            pygame.draw.rect(screen, (255, 0, 0), player2Clolide)
 
     # FPS counter
     if debug:
